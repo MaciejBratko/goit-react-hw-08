@@ -1,0 +1,68 @@
+.container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.contactInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.contactInfo p {
+  margin: 0;
+  padding: 0;
+}
+
+.name {
+  font-weight: bold;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.number {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.deleteButton {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.deleteButton:hover {
+  background-color: #c0392b;
+}
+
+.deleteButton:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 600px) {
+  .container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .deleteButton {
+    align-self: flex-end;
+  }
+}
