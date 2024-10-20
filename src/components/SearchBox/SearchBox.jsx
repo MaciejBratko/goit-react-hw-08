@@ -1,28 +1,38 @@
 import { useDispatch, useSelector } from "react-redux";
-import { useCallback } from "react";
-import { setNameFilter } from "../../redux/filtersSlice";
+import { setStatusFilter } from "../../redux/filtersSlice";
+import { selectFilter, selectContacts } from "../../redux/selectors";
 import css from "./SearchBox.module.css";
+import Fuse from "fuse.js";
+import { useMemo } from "react";
 
-const SearchBox = () => {
+export const SearchBox = () => {
   const dispatch = useDispatch();
-  const filter = useSelector((state) => state.filters.name);
+  const filter = useSelector(selectFilter);
+  const contacts = useSelector(selectContacts);
 
-  const handleChange = useCallback(
-    (e) => {
-      dispatch(setNameFilter(e.target.value));
-    },
-    [dispatch]
+  const fuse = useMemo(
+    () =>
+      new Fuse(contacts, {
+        keys: ["name", "number"],
+        threshold: 0.3,
+      }),
+    [contacts]
   );
+
+  const handleFilterChange = (e) => {
+    dispatch(setStatusFilter(e.target.value));
+  };
 
   return (
-    <input
-      className={css.input}
-      type="text"
-      value={filter}
-      onChange={handleChange}
-      placeholder="Search contacts"
-    />
+    <div className={css.wrapper}>
+      <label htmlFor="search">Find contacts by name or phone number</label>
+      <input
+        type="text"
+        id="search"
+        value={filter}
+        onChange={handleFilterChange}
+        placeholder="Enter name or phone number"
+      />
+    </div>
   );
 };
-
-export default SearchBox;

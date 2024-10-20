@@ -1,55 +1,29 @@
-import { useDispatch, useSelector } from "react-redux";
-import { useCallback, useMemo } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { deleteContact } from "../../redux/contactsSlice";
-import {
-  selectFilteredAndSortedContacts,
-  selectIsLoadingFetch,
-  selectError,
-  selectIsContactDeletingMap,
-} from "../../redux/selectors";
+import { selectVisibleContacts } from "../../redux/selectors";
 import Contact from "../Contact/Contact";
 import css from "./ContactList.module.css";
 
-const ContactList = () => {
+export const ContactList = ({ onEditContact }) => {
+  const contacts = useSelector(selectVisibleContacts);
   const dispatch = useDispatch();
-  const filteredAndSortedContacts = useSelector(
-    selectFilteredAndSortedContacts
+
+  const handleDelete = (id) => {
+    dispatch(deleteContact(id));
+  };
+
+  return (
+    <ul className={css.list}>
+      {contacts.map((contact) => (
+        <li key={contact.id} className={css.listItem}>
+          <Contact
+            data={contact}
+            onDelete={handleDelete}
+            onEdit={onEditContact}
+            isDeleting={false} // You might want to add a loading state for each contact in your Redux store
+          />
+        </li>
+      ))}
+    </ul>
   );
-  const isLoadingFetch = useSelector(selectIsLoadingFetch);
-  const error = useSelector(selectError);
-  const isContactDeletingMap = useSelector(selectIsContactDeletingMap);
-
-  const handleDelete = useCallback(
-    async (id) => {
-      try {
-        await dispatch(deleteContact(id)).unwrap();
-      } catch (error) {
-        console.error("Failed to delete contact:", error);
-      }
-    },
-    [dispatch]
-  );
-
-  const contactList = useMemo(() => {
-    return filteredAndSortedContacts.map((contact) => (
-      <Contact
-        key={contact.id}
-        data={contact}
-        onDelete={handleDelete}
-        isDeleting={isContactDeletingMap[contact.id]}
-      />
-    ));
-  }, [filteredAndSortedContacts, handleDelete, isContactDeletingMap]);
-
-  if (isLoadingFetch && filteredAndSortedContacts.length === 0) {
-    return <p>Loading contacts...</p>;
-  }
-
-  if (error) {
-    return <p className={css.error}>Error: {error}</p>;
-  }
-
-  return <ul className={css.list}>{contactList}</ul>;
 };
-
-export default ContactList;

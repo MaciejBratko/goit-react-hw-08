@@ -1,16 +1,15 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_ENDPOINT = "https://67143616690bf212c760f271.mockapi.io/contacts";
-
 export const fetchContacts = createAsyncThunk(
   "contacts/fetchAll",
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(API_ENDPOINT);
+      const response = await axios.get("/contacts");
+      console.log("Fetched contacts:", response.data); // Add this line
       return response.data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
+    } catch (e) {
+      return thunkAPI.rejectWithValue(e.message);
     }
   }
 );
@@ -19,10 +18,10 @@ export const addContact = createAsyncThunk(
   "contacts/addContact",
   async (contact, thunkAPI) => {
     try {
-      const response = await axios.post(API_ENDPOINT, contact);
+      const response = await axios.post("/contacts", contact);
       return response.data;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
+    } catch (e) {
+      return thunkAPI.rejectWithValue(e.message);
     }
   }
 );
@@ -31,10 +30,22 @@ export const deleteContact = createAsyncThunk(
   "contacts/deleteContact",
   async (contactId, thunkAPI) => {
     try {
-      await axios.delete(`${API_ENDPOINT}/${contactId}`);
+      await axios.delete(`/contacts/${contactId}`);
       return contactId;
-    } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
+    } catch (e) {
+      return thunkAPI.rejectWithValue(e.message);
+    }
+  }
+);
+
+export const editContact = createAsyncThunk(
+  "contacts/editContact",
+  async ({ id, ...updatedContact }, thunkAPI) => {
+    try {
+      const response = await axios.patch(`/contacts/${id}`, updatedContact);
+      return response.data;
+    } catch (e) {
+      return thunkAPI.rejectWithValue(e.message);
     }
   }
 );
@@ -43,52 +54,42 @@ const contactsSlice = createSlice({
   name: "contacts",
   initialState: {
     items: [],
-    isLoading: {
-      fetch: false,
-      add: false,
-      delete: {},
-    },
+    isLoading: false,
     error: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(fetchContacts.pending, (state) => {
-        state.isLoading.fetch = true;
+        state.isLoading = true;
       })
       .addCase(fetchContacts.fulfilled, (state, action) => {
-        state.isLoading.fetch = false;
+        state.isLoading = false;
+        state.error = null;
         state.items = action.payload;
       })
       .addCase(fetchContacts.rejected, (state, action) => {
-        state.isLoading.fetch = false;
+        state.isLoading = false;
         state.error = action.payload;
-      })
-      .addCase(addContact.pending, (state) => {
-        state.isLoading.add = true;
       })
       .addCase(addContact.fulfilled, (state, action) => {
-        state.isLoading.add = false;
         state.items.push(action.payload);
       })
-      .addCase(addContact.rejected, (state, action) => {
-        state.isLoading.add = false;
-        state.error = action.payload;
-      })
-      .addCase(deleteContact.pending, (state, action) => {
-        state.isLoading.delete[action.meta.arg] = true;
-      })
       .addCase(deleteContact.fulfilled, (state, action) => {
-        state.isLoading.delete[action.payload] = false;
-        state.items = state.items.filter(
-          (contact) => contact.id !== action.payload
+        const index = state.items.findIndex(
+          (contact) => contact.id === action.payload
         );
+        state.items.splice(index, 1);
       })
-      .addCase(deleteContact.rejected, (state, action) => {
-        state.isLoading.delete[action.meta.arg] = false;
-        state.error = action.payload;
+      .addCase(editContact.fulfilled, (state, action) => {
+        const index = state.items.findIndex(
+          (contact) => contact.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.items[index] = action.payload;
+        }
       });
   },
 });
 
-export default contactsSlice.reducer;
+export const contactsReducer = contactsSlice.reducer;

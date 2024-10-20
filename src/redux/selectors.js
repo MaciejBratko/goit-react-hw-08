@@ -1,38 +1,22 @@
 import { createSelector } from "@reduxjs/toolkit";
+import Fuse from "fuse.js";
 
 export const selectContacts = (state) => state.contacts.items;
-export const selectIsLoadingFetch = (state) => state.contacts.isLoading.fetch;
-export const selectIsLoadingAdd = (state) => state.contacts.isLoading.add;
-export const selectIsLoadingDelete = (state) => state.contacts.isLoading.delete;
+export const selectIsLoading = (state) => state.contacts.isLoading;
 export const selectError = (state) => state.contacts.error;
-export const selectFilter = (state) => state.filters.name;
+export const selectFilter = (state) => state.filters.status;
 
-export const selectContactCount = createSelector(
-  [selectContacts],
-  (contacts) => contacts.length
-);
-
-export const selectFilteredAndSortedContacts = createSelector(
+export const selectVisibleContacts = createSelector(
   [selectContacts, selectFilter],
   (contacts, filter) => {
-    const filteredContacts = filter
-      ? contacts.filter((contact) =>
-          contact.name.toLowerCase().includes(filter.toLowerCase())
-        )
-      : contacts;
-    return Object.freeze(
-      [...filteredContacts].sort((a, b) => a.name.localeCompare(b.name))
-    );
-  }
-);
+    if (!filter) return contacts;
 
-export const selectIsContactDeletingMap = createSelector(
-  [selectFilteredAndSortedContacts, selectIsLoadingDelete],
-  (sortedContacts, isLoadingDelete) =>
-    Object.freeze(
-      sortedContacts.reduce((acc, contact) => {
-        acc[contact.id] = isLoadingDelete[contact.id] || false;
-        return acc;
-      }, {})
-    )
+    const fuse = new Fuse(contacts, {
+      keys: ["name", "number"],
+      threshold: 0.3,
+    });
+
+    const searchResults = fuse.search(filter);
+    return searchResults.map((result) => result.item);
+  }
 );

@@ -1,91 +1,56 @@
-import { useState, useCallback, useMemo } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { addContact } from "../../redux/contactsSlice";
-import {
-  selectContacts,
-  selectIsLoadingAdd,
-  selectError,
-} from "../../redux/selectors";
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 import css from "./ContactForm.module.css";
 
-const ContactForm = () => {
-  const [name, setName] = useState("");
-  const [number, setNumber] = useState("");
+const validationSchema = Yup.object({
+  name: Yup.string()
+    .required("Name is required")
+    .min(2, "Name must be at least 2 characters")
+    .matches(
+      /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/,
+      "Name may contain only letters, apostrophe, dash and spaces"
+    ),
+  number: Yup.string()
+    .required("Number is required")
+    .matches(
+      /\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/,
+      "Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
+    ),
+});
+
+export const ContactForm = () => {
   const dispatch = useDispatch();
-  const contacts = useSelector(selectContacts);
-  const isLoading = useSelector(selectIsLoadingAdd);
-  const error = useSelector(selectError);
 
-  const validateName = (input) => {
-    return /^[a-zA-Z\s]*$/.test(input);
+  const handleSubmit = (values, { resetForm }) => {
+    dispatch(addContact(values));
+    resetForm();
   };
-
-  const validateNumber = (input) => {
-    return /^[0-9\s+-]*$/.test(input);
-  };
-
-  const handleNameChange = useCallback((e) => {
-    const newName = e.target.value;
-    if (validateName(newName)) {
-      setName(newName);
-    }
-  }, []);
-
-  const handleNumberChange = useCallback((e) => {
-    const newNumber = e.target.value;
-    if (validateNumber(newNumber)) {
-      setNumber(newNumber);
-    }
-  }, []);
-
-  const isContactExist = useMemo(() => {
-    return contacts.some(
-      (contact) => contact.name.toLowerCase() === name.toLowerCase()
-    );
-  }, [contacts, name]);
-
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
-      if (isContactExist) {
-        alert(`${name} is already in contacts.`);
-        return;
-      }
-      try {
-        await dispatch(addContact({ name, phone: number })).unwrap();
-        setName("");
-        setNumber("");
-      } catch (error) {
-        console.error("Failed to add contact:", error);
-      }
-    },
-    [dispatch, isContactExist, name, number]
-  );
 
   return (
-    <form className={css.form} onSubmit={handleSubmit}>
-      <input
-        type="text"
-        name="name"
-        value={name}
-        onChange={handleNameChange}
-        placeholder="Name"
-        required
-      />
-      <input
-        type="tel"
-        name="number"
-        value={number}
-        onChange={handleNumberChange}
-        placeholder="Phone number"
-        required
-      />
-      <button type="submit" disabled={isLoading}>
-        {isLoading ? "Adding..." : "Add contact"}
-      </button>
-      {error && <p className={css.error}>Error: {error}</p>}
-    </form>
+    <Formik
+      initialValues={{ name: "", number: "" }}
+      validationSchema={validationSchema}
+      onSubmit={handleSubmit}
+    >
+      {({ isSubmitting }) => (
+        <Form className={css.form}>
+          <label className={css.label}>
+            Name
+            <Field type="text" name="name" />
+            <ErrorMessage name="name" component="div" className={css.error} />
+          </label>
+          <label className={css.label}>
+            Number
+            <Field type="tel" name="number" />
+            <ErrorMessage name="number" component="div" className={css.error} />
+          </label>
+          <button type="submit" disabled={isSubmitting}>
+            Add contact
+          </button>
+        </Form>
+      )}
+    </Formik>
   );
 };
-
-export default ContactForm;
