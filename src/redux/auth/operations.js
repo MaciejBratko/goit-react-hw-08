@@ -19,10 +19,7 @@ export const register = createAsyncThunk(
       setAuthHeader(res.data.token);
       return res.data;
     } catch (error) {
-      console.error("Registration error:", error);
-      console.error("Error response:", error.response);
-      console.error("Error message:", error.message);
-      return thunkAPI.rejectWithValue(error.response?.data || error.message);
+      return thunkAPI.rejectWithValue(error);
     }
   }
 );
@@ -35,7 +32,7 @@ export const logIn = createAsyncThunk(
       setAuthHeader(res.data.token);
       return res.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
+      return thunkAPI.rejectWithValue(error);
     }
   }
 );
@@ -45,7 +42,7 @@ export const logOut = createAsyncThunk("auth/logout", async (_, thunkAPI) => {
     await axios.post("/users/logout");
     clearAuthHeader();
   } catch (error) {
-    return thunkAPI.rejectWithValue(error.message);
+    return thunkAPI.rejectWithValue(error);
   }
 });
 
@@ -64,7 +61,7 @@ export const refreshUser = createAsyncThunk(
       const res = await axios.get("/users/current");
       return res.data;
     } catch (error) {
-      return thunkAPI.rejectWithValue(error.message);
+      return thunkAPI.rejectWithValue(error);
     }
   }
 );

@@ -15,7 +15,7 @@ const validationSchema = Yup.object({
   number: Yup.string()
     .required("Number is required")
     .matches(
-      /\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/,
+      /^(\+?\d{1,4}[-.\s]?)?(\(?\d{1,3}\)?[-.\s]?)?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}$/,
       "Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
     ),
 });
@@ -43,7 +43,21 @@ export const ContactForm = () => {
           </label>
           <label className={css.label}>
             Number
-            <Field type="tel" name="number" />
+            <Field
+              type="tel"
+              name="number"
+              onKeyPress={(e) => {
+                const charCode = e.which ? e.which : e.keyCode;
+                const allowedChars = [43, 45, 40, 41, 32]; // +, -, (, ), space
+                if (
+                  charCode > 31 &&
+                  (charCode < 48 || charCode > 57) &&
+                  !allowedChars.includes(charCode)
+                ) {
+                  e.preventDefault();
+                }
+              }}
+            />
             <ErrorMessage name="number" component="div" className={css.error} />
           </label>
           <button type="submit" disabled={isSubmitting}>
