@@ -9,11 +9,21 @@ const initialState = {
   error: null,
 };
 
-const getErrorMessage = (error) => {
-  if (error.response && error.response.data && error.response.data.message) {
-    return error.response.data.message;
+const getErrorMessage = (payload) => {
+  if (typeof payload === "string") {
+    return payload;
   }
-  return error.message || "An unknown error occurred";
+  if (
+    payload &&
+    payload.response &&
+    payload.response.data &&
+    payload.response.data.message
+  ) {
+    return payload.response.data.message;
+  }
+  return payload && payload.message
+    ? payload.message
+    : "An unknown error occurred";
 };
 
 const authSlice = createSlice({
